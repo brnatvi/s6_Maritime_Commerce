@@ -29,39 +29,45 @@ CREATE TABLE continent (
 
 CREATE TABLE country (
     id_country SERIAL PRIMARY KEY,    
-    name_country VARCHAR(255) NOT NULL UNIQUE,
-    id_continent INT,
-    FOREIGN KEY (id_continent) REFERENCES continent (id_continent)
+    name_country VARCHAR(255) NOT NULL UNIQUE    
 );
 
 CREATE TABLE country_relations (
     id_country1 INT,
     id_country2 INT,
-    relation eRelationDiplom NOT NULL,
+    relation eRelationDiplom,
+    PRIMARY KEY (id_country1, id_country2),
     FOREIGN KEY (id_country1) REFERENCES country (id_country),
     FOREIGN KEY (id_country2) REFERENCES country (id_country)   
 );
 
+ALTER TABLE country_relations ADD CONSTRAINT ally_itself CHECK (IF id_country1 = id_country2 THEN relation = 'ally');
+
+
 CREATE TABLE port (
     id_port SERIAL PRIMARY KEY,
     name_port VARCHAR(255) NOT NULL,
-    category_port INT CONSTRAINT from_1_to_5 CHECK (category_port >= 1 AND category_port <= 5)
+    id_continent INT,
+    nationality INT,
+    category_port INT CONSTRAINT from_1_to_5 CHECK (category_port >= 1 AND category_port <= 5),
+    FOREIGN KEY (id_continent) REFERENCES continent (id_continent),
+    FOREIGN KEY (nationality) REFERENCES country (id_country)
 );
 
 CREATE TABLE distances_ports (
     id_port1 INT,
     id_port2 INT,
-    distance NUMERIC(10, 2),
+    distance NUMERIC(10, 2) CONSTRAINT distance_positive CHECK (distance > 0),
     PRIMARY KEY (id_port1, id_port2),
     FOREIGN KEY (id_port1) REFERENCES port (id_port),
     FOREIGN KEY (id_port2) REFERENCES port (id_port)
-);
+);                                                  
 
 CREATE TABLE type_ship (
     id_type SERIAL PRIMARY KEY,   
     name_type VARCHAR(255),
     category_ship INT CONSTRAINT from_1_to_5 CHECK (category_ship >= 1 AND category_ship <= 5),
-    speed NUMERIC(4,1)
+    speed NUMERIC(4,1) CONSTRAINT speed_positive CHECK (speed > 0)
 );
 
 CREATE TABLE ship (
@@ -69,8 +75,8 @@ CREATE TABLE ship (
     name_ship VARCHAR(255),
     id_type INT,
     nationality INT,
-    volume_hold INT NOT NULL,   
-    nb_places_passagers INT NOT NULL,  
+    volume_hold INT NOT NULL CONSTRAINT vol_positive CHECK (volume_hold > 0),
+    nb_places_passagers INT NOT NULL CONSTRAINT pass_present CHECK (nb_places_passagers > 0),  
     localisation NUMERIC(4,4),
     FOREIGN KEY (id_type) REFERENCES type_ship (id_type),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
@@ -80,17 +86,7 @@ CREATE TABLE ship (
 CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
     name_product VARCHAR(255),
-    is_dry BOOLEAN,
-    volume_product NUMERIC(4,1) NOT NULL CONSTRAINT v_positive CHECK (volume_product > 0),
+    is_dry BOOLEAN,    
     weight_product NUMERIC(4,1) NOT NULL CONSTRAINT w_positive CHECK (weight_product > 0),
-    price_kilo NUMERIC(4,1) NOT NULL
+    price_kilo NUMERIC(4,1) NOT NULL CONSTRAINT price_positive CHECK (price_kilo > 0)
 );
-
-
-\COPY country(id_country, nom_country, id_continent) FROM 'csv/country.csv' (DELIMITER ',', FORMAT CSV);
-\COPY continent(id_continent, nom_continent) FROM 'csv/continent.csv' (DELIMITER ',', FORMAT CSV);
-\COPY port(id_port, nam_port, category_port) FROM 'csv/port.csv' (DELIMITER ',', FORMAT CSV);
-\COPY country_relations(id_country1, id_country2, relation) FROM 'csv/country_relations.csv' (DELIMITER ',', FORMAT CSV);
-\COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances_ports.csv' (DELIMITER ',', FORMAT CSV);
-\COPY type_ship(id_type, name_type, category_ship, speed) FROM 'csv/category_ship.csv' (DELIMITER ',', FORMAT CSV);
-\COPY product(id_product, name_product, is_dry, volume_product, weight_product, price_kilo) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
