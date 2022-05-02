@@ -89,3 +89,49 @@ CREATE TABLE product (
     weight_product NUMERIC(4,1) NOT NULL CONSTRAINT w_positive CHECK (weight_product > 0),
     price_kilo NUMERIC(4,1) NOT NULL CONSTRAINT price_positive CHECK (price_kilo > 0)
 );
+
+/*
+TODO: CREATE TABLE
+travel_class
+travel_category
+??
+*/
+
+CREATE TABLE travel (
+    id_travel PRIMARY KEY,
+    id_ship INT,
+    quantity INT,
+    date_arrival DATE,
+    date_departure DATE,
+    FOREIGN KEY (id_ship) REFERENCES ship (id_ship)
+);
+
+CREATE TABLE step (
+    id_step SERIAL PRIMARY KEY,
+    id_travel INT,
+    id_port INT,
+    visiting_order INT,
+    date_arrival DATE,
+    date_departure DATE,
+    passenger_movement INT,
+    FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
+    FOREIGN KEY (id_port) REFERENCES port (id_port)
+);
+
+CREATE TABLE cargo_step (
+    id_product INT,
+    id_step INT,
+    quantity INT,
+    Primary Key (id_product, id_step),/*???*/
+    FOREIGN KEY (id_product) REFERENCES product (id_product),
+    FOREIGN KEY (id_step) REFERENCES step (id_step)
+);
+
+CREATE TABLE cargo_port (
+    id_product INT,
+    id_port INT,
+    quantity INT,
+    Primary Key (id_product, id_port),/*???*/
+    FOREIGN KEY (id_product) REFERENCES product (id_product),
+    FOREIGN KEY (id_port) REFERENCES port (id_port)
+);
