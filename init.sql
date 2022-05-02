@@ -41,7 +41,6 @@ CREATE TABLE country_relations (
     FOREIGN KEY (id_country2) REFERENCES country (id_country)   
 );
 
-ALTER TABLE country_relations ADD CONSTRAINT ally_itself CHECK (IF id_country1 = id_country2 THEN relation = 'ally');
 
 
 CREATE TABLE port (
