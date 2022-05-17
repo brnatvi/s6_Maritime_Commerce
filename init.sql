@@ -42,13 +42,12 @@ CREATE TABLE country_relations (
 );
 
 
-
 CREATE TABLE port (
     id_port SERIAL PRIMARY KEY,
     name_port VARCHAR(255) NOT NULL,
+    category_port INT CHECK (category_port >= 1 AND category_port <= 5),
     id_continent INT,
-    nationality INT,
-    category_port INT CONSTRAINT from_1_to_5 CHECK (category_port >= 1 AND category_port <= 5),
+    nationality INT,    
     FOREIGN KEY (id_continent) REFERENCES continent (id_continent),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
 );
@@ -56,17 +55,18 @@ CREATE TABLE port (
 CREATE TABLE distances_ports (
     id_port1 INT,
     id_port2 INT,
-    distance NUMERIC(10, 2) CONSTRAINT distance_positive CHECK (distance > 0),
+    distance NUMERIC(10, 2) CHECK (distance > 0),
     PRIMARY KEY (id_port1, id_port2),
     FOREIGN KEY (id_port1) REFERENCES port (id_port),
     FOREIGN KEY (id_port2) REFERENCES port (id_port)
-);                                                  
+);
+
 
 CREATE TABLE type_ship (
     id_type SERIAL PRIMARY KEY,   
     name_type VARCHAR(255),
-    category_ship INT CONSTRAINT from_1_to_5 CHECK (category_ship >= 1 AND category_ship <= 5),
-    speed NUMERIC(4,1) CONSTRAINT speed_positive CHECK (speed > 0)
+    category_ship INT CHECK (category_ship >= 1 AND category_ship <= 5),
+    speed NUMERIC(4,1) CHECK (speed > 0)
 );
 
 CREATE TABLE ship (
@@ -74,9 +74,9 @@ CREATE TABLE ship (
     name_ship VARCHAR(255),
     id_type INT,
     nationality INT,
-    volume_hold INT NOT NULL CONSTRAINT vol_positive CHECK (volume_hold > 0),
-    nb_places_passagers INT NOT NULL CONSTRAINT pass_present CHECK (nb_places_passagers > 0),  
-    localisation NUMERIC(4,4),
+    volume_hold INT NOT NULL CHECK (volume_hold > 0),
+    nb_places_passagers INT NOT NULL CHECK (nb_places_passagers > 0),  
+    localisation NUMERIC(8,8),
     FOREIGN KEY (id_type) REFERENCES type_ship (id_type),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
 );
@@ -86,9 +86,10 @@ CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
     name_product VARCHAR(255),
     is_dry BOOLEAN,    
-    weight_product NUMERIC(4,1) NOT NULL CONSTRAINT w_positive CHECK (weight_product > 0),
-    price_kilo NUMERIC(4,1) NOT NULL CONSTRAINT price_positive CHECK (price_kilo > 0)
+    weight_product NUMERIC(4,1) NOT NULL CHECK (weight_product > 0),
+    price_kilo NUMERIC(4,1) NOT NULL CHECK (price_kilo > 0)
 );
+
 
 /*
 TODO: CREATE TABLE
@@ -98,40 +99,46 @@ travel_category
 */
 
 CREATE TABLE travel (
-    id_travel PRIMARY KEY,
+    id_travel SERIAL PRIMARY KEY,
     id_ship INT,
-    quantity INT,
-    date_arrival DATE,
-    date_departure DATE,
-    FOREIGN KEY (id_ship) REFERENCES ship (id_ship)
+    quantity INT,   
+    FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
 );
 
 CREATE TABLE step (
     id_step SERIAL PRIMARY KEY,
     id_travel INT,
     id_port INT,
-    visiting_order INT,
+    visiting_order INT CHECK (visiting_order >= 0),
     date_arrival DATE,
     date_departure DATE,
-    passenger_movement INT,
+    nb_passagers_in INT DEFAULT 0 CHECK (nb_passagers_in >= 0),
+    nb_passagers_out INT DEFAULT 0 CHECK (nb_passagers_out >= 0),
     FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
-    FOREIGN KEY (id_port) REFERENCES port (id_port)
+    FOREIGN KEY (id_port) REFERENCES port (id_port),
+    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)
 );
 
 CREATE TABLE cargo_step (
-    id_product INT,
+    id_cargo_step SERIAL PRIMARY KEY,
     id_step INT,
+    id_product INT,
+    load_unload eAction,
     quantity INT,
-    Primary Key (id_product, id_step),/*???*/
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_step) REFERENCES step (id_step)
 );
 
 CREATE TABLE cargo_port (
-    id_product INT,
+    id_cargo_port SERIAL PRIMARY KEY,
     id_port INT,
+    id_product INT,      
     quantity INT,
-    Primary Key (id_product, id_port),/*???*/
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_port) REFERENCES port (id_port)
 );
+
+
+\i views.sql
+\i triggers.sql
+/* \i uploads.sql  */
