@@ -3,8 +3,12 @@ CREATE DATABASE maritime_commerce;
 
 \connect maritime_commerce
 
-DROP TABLE IF EXISTS ingredients cascade;
-DROP TABLE IF EXISTS security_client cascade;
+
+DROP TABLE IF EXISTS cargo_port cascade;
+DROP TABLE IF EXISTS cargo_step cascade;
+DROP TABLE IF EXISTS step cascade;
+DROP TABLE IF EXISTS travel cascade;
+DROP TABLE IF EXISTS product cascade;
 
 DROP TABLE IF EXISTS ship cascade;
 DROP TABLE IF EXISTS type_ship cascade;
@@ -15,8 +19,8 @@ DROP TABLE IF EXISTS distances_ports cascade;
 DROP TABLE IF EXISTS port cascade;
 
 
-CREATE TYPE eTypeTrip AS ENUM ('court', 'medium', 'long');
-CREATE TYPE eClassTrip AS ENUM ('Europe', 'America', 'Asia', 'Africa', 'Oceania', 'Intercontinental');
+CREATE TYPE eTypeTravel AS ENUM ('court', 'medium', 'long');
+CREATE TYPE eClassTravel AS ENUM ('Europe', 'America', 'Asia', 'Africa', 'Intercontinental');
 CREATE TYPE eAction AS ENUM ('load', 'unload');
 CREATE TYPE eRelationDiplom AS ENUM ('ally commercial', 'ally', 'neutral', 'belligerent');
 
@@ -24,12 +28,12 @@ CREATE TYPE eRelationDiplom AS ENUM ('ally commercial', 'ally', 'neutral', 'bell
 
 CREATE TABLE continent (
     id_continent SERIAL PRIMARY KEY,    
-    name_continent VARCHAR(255) NOT NULL UNIQUE   
+    name_continent VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE country (
     id_country SERIAL PRIMARY KEY,    
-    name_country VARCHAR(255) NOT NULL UNIQUE    
+    name_country VARCHAR(255) NOT NULL UNIQUE   
 );
 
 CREATE TABLE country_relations (
@@ -55,7 +59,7 @@ CREATE TABLE port (
 CREATE TABLE distances_ports (
     id_port1 INT,
     id_port2 INT,
-    distance NUMERIC(10, 2) CHECK (distance > 0),
+    distance INT CHECK (distance > 0),
     PRIMARY KEY (id_port1, id_port2),
     FOREIGN KEY (id_port1) REFERENCES port (id_port),
     FOREIGN KEY (id_port2) REFERENCES port (id_port)
@@ -97,10 +101,26 @@ travel_class
 travel_category
 ??
 */
+/*
+CREATE TABLE travel_class (
+    id_class SERIAL PRIMARY KEY,
+    name_class eClassTravel 
+);
+
+CREATE TABLE travel_category (
+    id_category SERIAL PRIMARY KEY,
+    name_class eClassTravel    
+);
+
+*/
+
+
 
 CREATE TABLE travel (
     id_travel SERIAL PRIMARY KEY,
     id_ship INT,
+    class eClassTravel,
+    tr_type eTypeTravel,
     quantity INT,   
     FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
 );
@@ -116,7 +136,7 @@ CREATE TABLE step (
     nb_passagers_out INT DEFAULT 0 CHECK (nb_passagers_out >= 0),
     FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
     FOREIGN KEY (id_port) REFERENCES port (id_port),
-    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)
+    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)    
 );
 
 CREATE TABLE cargo_step (
@@ -142,3 +162,4 @@ CREATE TABLE cargo_port (
 \i views.sql
 \i triggers.sql
 /* \i uploads.sql  */
+\i rules.sql

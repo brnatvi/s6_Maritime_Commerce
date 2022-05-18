@@ -1,4 +1,6 @@
 
+/* Nautical distances: https://classic.searoutes.com/routing/4294967355/4294967513?speed=13&panama=true&suez=true&kiel=true&rivers=block&roads=block  */
+
 \COPY country(id_country, name_country) FROM 'csv/country.csv' (DELIMITER ',', FORMAT CSV);
 \COPY continent(id_continent, name_continent) FROM 'csv/continent.csv' (DELIMITER ',', FORMAT CSV);
 \COPY port(id_port, name_port, category_port, id_continent, nationality) FROM 'csv/port.csv' (DELIMITER ',', FORMAT CSV);
