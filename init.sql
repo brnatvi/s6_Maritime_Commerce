@@ -18,28 +18,24 @@ DROP TABLE IF EXISTS continent cascade;
 DROP TABLE IF EXISTS distances_ports cascade;
 DROP TABLE IF EXISTS port cascade;
 
-
+/*
 CREATE TYPE eTypeTravel AS ENUM ('court', 'medium', 'long');
-CREATE TYPE eClassTravel AS ENUM ('Europe', 'America', 'Asia', 'Africa', 'Intercontinental');
-CREATE TYPE eAction AS ENUM ('load', 'unload');
-CREATE TYPE eRelationDiplom AS ENUM ('ally commercial', 'ally', 'neutral', 'belligerent');
-
-
+*/
 
 CREATE TABLE continent (
     id_continent SERIAL PRIMARY KEY,    
-    name_continent VARCHAR(255) NOT NULL UNIQUE
+    name_continent VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE country (
     id_country SERIAL PRIMARY KEY,    
-    name_country VARCHAR(255) NOT NULL UNIQUE   
+    name_country VARCHAR(20) NOT NULL UNIQUE   
 );
 
 CREATE TABLE country_relations (
     id_country1 INT,
     id_country2 INT,
-    relation eRelationDiplom,
+    relation VARCHAR(50) CHECK (relation IN ('ally commercial', 'ally', 'neutral', 'belligerent')),
     PRIMARY KEY (id_country1, id_country2),
     FOREIGN KEY (id_country1) REFERENCES country (id_country),
     FOREIGN KEY (id_country2) REFERENCES country (id_country)   
@@ -48,7 +44,7 @@ CREATE TABLE country_relations (
 
 CREATE TABLE port (
     id_port SERIAL PRIMARY KEY,
-    name_port VARCHAR(255) NOT NULL,
+    name_port VARCHAR(50) UNIQUE NOT NULL,
     category_port INT CHECK (category_port >= 1 AND category_port <= 5),
     id_continent INT,
     nationality INT,    
@@ -68,19 +64,19 @@ CREATE TABLE distances_ports (
 
 CREATE TABLE type_ship (
     id_type SERIAL PRIMARY KEY,   
-    name_type VARCHAR(255),
+    name_type VARCHAR(20),
     category_ship INT CHECK (category_ship >= 1 AND category_ship <= 5),
     speed NUMERIC(4,1) CHECK (speed > 0)
 );
 
 CREATE TABLE ship (
     id_ship SERIAL PRIMARY KEY,
-    name_ship VARCHAR(255),
+    name_ship VARCHAR(50),
     id_type INT,
     nationality INT,
     volume_hold INT NOT NULL CHECK (volume_hold > 0),
     nb_places_passagers INT NOT NULL CHECK (nb_places_passagers > 0),  
-    localisation NUMERIC(8,8),
+    localisation NUMERIC(20,10),
     FOREIGN KEY (id_type) REFERENCES type_ship (id_type),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
 );
@@ -88,40 +84,18 @@ CREATE TABLE ship (
 
 CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
-    name_product VARCHAR(255),
+    name_product VARCHAR(20),
     is_dry BOOLEAN,    
     weight_product NUMERIC(4,1) NOT NULL CHECK (weight_product > 0),
     price_kilo NUMERIC(4,1) NOT NULL CHECK (price_kilo > 0)
 );
 
 
-/*
-TODO: CREATE TABLE
-travel_class
-travel_category
-??
-*/
-/*
-CREATE TABLE travel_class (
-    id_class SERIAL PRIMARY KEY,
-    name_class eClassTravel 
-);
-
-CREATE TABLE travel_category (
-    id_category SERIAL PRIMARY KEY,
-    name_class eClassTravel    
-);
-
-*/
-
-
-
 CREATE TABLE travel (
     id_travel SERIAL PRIMARY KEY,
     id_ship INT,
-    class eClassTravel,
-    tr_type eTypeTravel,
-    quantity INT,   
+    class VARCHAR(20) CHECK (class IN ('Europe', 'America', 'Asia', 'Africa', 'Intercontinental')),
+    tr_type VARCHAR(20) CHECK (class IN ('court', 'medium', 'long')),
     FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
 );
 
@@ -143,7 +117,7 @@ CREATE TABLE cargo_step (
     id_cargo_step SERIAL PRIMARY KEY,
     id_step INT,
     id_product INT,
-    load_unload eAction,
+    load_unload VARCHAR(10) CHECK (load_unload IN ('load', 'unload')),
     quantity INT,
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_step) REFERENCES step (id_step)
