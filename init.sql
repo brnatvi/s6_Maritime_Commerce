@@ -86,8 +86,8 @@ CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
     name_product VARCHAR(20),
     is_dry BOOLEAN,    
-    weight_product NUMERIC(4,1) NOT NULL CHECK (weight_product > 0),
-    price_kilo NUMERIC(4,1) NOT NULL CHECK (price_kilo > 0)
+    volume_product NUMERIC(4,1) CHECK (volume_product > 0),    /* volume for 1 unity */
+    weight_product NUMERIC(4,1) CHECK (weight_product > 0)     /* weight for 1 unity */
 );
 
 
@@ -119,7 +119,7 @@ CREATE TABLE cargo_step (
     id_step INT,
     id_product INT,
     load_unload VARCHAR(10) CHECK (load_unload IN ('load', 'unload')),
-    quantity INT,
+    quantity INT,                                                                       /* number of unities of product */
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_step) REFERENCES step (id_step)
 );
@@ -127,7 +127,7 @@ CREATE TABLE cargo_step (
 CREATE TABLE cargo_port (    
     id_port INT,
     id_product INT,      
-    quantity INT,
+    quantity INT,                                                                       /* number of unities of product */
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_port) REFERENCES port (id_port)
 );

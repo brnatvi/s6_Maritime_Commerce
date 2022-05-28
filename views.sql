@@ -49,11 +49,20 @@ UPDATE travel SET tr_type = 'long' FROM (SELECT * FROM view_total_dist_trips) AS
 /* ======================================= END definition of tr_type for travel =================================================== */
 
 
-/* ======================== Duration of trip etap by etap =====================================================*/
-/*
- CREATE VIEW view_total_distances AS (SELECT id_travel, SUM(distance) AS total_distance) FROM view_distances_etaps GROUP BY id_travel);  */
+/* ========================================== Duration of trip etap by etap =====================================================*/
 
+CREATE VIEW view_total_distances AS 
+(
+    SELECT id_travel, SUM(distance) AS total_distance FROM view_distances_etaps 
+    GROUP BY id_travel
+);
 /*	La durée d’un voyage est définie par : vitesse_navire * SUM ALL ( distances intermédiaires de son voyage) / ( 0.5*SUM ALL(poids_produit)).*/
+CREATE VIEW view_data_ships AS 
+(
+    SELECT id_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
+);
+
+
 
 /*===================================== BEGIN definition of class for travel ====================================================*/
 /* continent for each step*/

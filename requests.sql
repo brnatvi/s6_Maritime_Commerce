@@ -9,6 +9,9 @@ NATURAL JOIN continent;
 
 /*  une 'auto jointure' (jointure de deux copies d'une meme table)*/
 
+
+/*  une sous-requete correlee ;*/
+
 SELECT DISTINCT step.id_travel, sub_query1.date_departure, sub_query.date_arrival
 FROM  step
 INNER JOIN
@@ -19,16 +22,12 @@ INNER JOIN
     AS sub_query ON (sub_query.id_travel = step.id_travel)
 INNER JOIN 
     (SELECT id_travel, date_departure FROM step WHERE visiting_order = 0 GROUP BY id_travel, date_departure)
-    AS sub_query1 ON (sub_query1.id_travel = step.id_travel)
+    AS sub_query1 ON (sub_query1.id_travel = sub_query.id_travel)
 ORDER BY id_travel; 
-
-/*  une sous-requete correlee ;*/
-
-
 
 /*  une sous-requete dans le FROM;*/
 
-
+UPDATE travel SET date_departure = A.dates FROM (SELECT id_travel, date_departure FROM view_travel_dep_arr) AS A(id, dates) WHERE (id_travel = A.id);
 
 /*  une sous-requete dans le WHERE;*/
 
