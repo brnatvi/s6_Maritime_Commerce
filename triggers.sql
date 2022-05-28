@@ -26,14 +26,14 @@ CREATE TRIGGER modif_stocks BEFORE INSERT ON cargo_step FOR EACH STATEMENT EXECU
 
 
 /*=========== fill eTypeTravel ('court', 'medium', 'long') as tr_type to table travel according summary distance of travel =========================*/
-CREATE OR REPLACE FUNCTION find_type() RETURNS TRIGGER AS 
+/*CREATE OR REPLACE FUNCTION find_type() RETURNS TRIGGER AS 
 $$
 DECLARE 
     sum INT;
 BEGIN    
     IF TG_OP = 'UPDATE' OR TG_OP = 'INSERT' THEN
     BEGIN
-        SELECT sum(distance) INTO sum FROM view_distances_etaps WHERE id_travel = NEW.id_travel;      
+        SELECT id_travel, sum(distance) INTO sum FROM view_distances_etaps GROUP BY id_travel WHERE id_travel = NEW.id_travel;      
 
         IF sum < 1000 THEN UPDATE travel SET tr_type = 'court' WHERE id_travel = NEW.id_travel;
             ELSEIF sum >= 1000 AND sum <= 2000 THEN UPDATE travel SET tr_type = 'medium' WHERE id_travel = NEW.id_travel;
@@ -48,4 +48,4 @@ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS define_type_travel ON view_distances_etaps;
 CREATE TRIGGER define_type_travel BEFORE INSERT ON view_distances_etaps FOR EACH STATEMENT EXECUTE FUNCTION find_type();
-
+*/

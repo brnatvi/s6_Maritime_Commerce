@@ -1,6 +1,4 @@
 
-
-
 /* une requete qui porte sur au moins trois tables ;*/
 
 SELECT step.id_travel, name_continent AS travel_class 
@@ -11,7 +9,18 @@ NATURAL JOIN continent;
 
 /*  une 'auto jointure' (jointure de deux copies d'une meme table)*/
 
-
+SELECT DISTINCT step.id_travel, sub_query1.date_departure, sub_query.date_arrival
+FROM  step
+INNER JOIN
+    (SELECT step.id_travel, MAX(step.date_arrival) as date_arrival
+     FROM step
+     GROUP BY step.id_travel
+    )
+    AS sub_query ON (sub_query.id_travel = step.id_travel)
+INNER JOIN 
+    (SELECT id_travel, date_departure FROM step WHERE visiting_order = 0 GROUP BY id_travel, date_departure)
+    AS sub_query1 ON (sub_query1.id_travel = step.id_travel)
+ORDER BY id_travel; 
 
 /*  une sous-requete correlee ;*/
 
@@ -22,6 +31,7 @@ NATURAL JOIN continent;
 
 
 /*  une sous-requete dans le WHERE;*/
+
 
 
 
@@ -50,11 +60,9 @@ GROUP BY id_travel;
 
 /*  une jointure externe (LEFT JOIN, RIGHT JOIN ou FULL JOIN) ; */
 SELECT id_travel, p1.id_port AS port1, p2.id_port AS port2, d.distance 
-    FROM step p1 
-    JOIN step p2 USING (id_travel) 
-    LEFT JOIN distances_ports d ON d.id_port1 = p1.id_port AND d.id_port2 = p2.id_port 
+    FROM step p1 JOIN step p2 USING (id_travel) LEFT JOIN view_distances d ON d.id_port1 = p1.id_port AND d.id_port2 = p2.id_port 
     WHERE  p2.visiting_order = p1.visiting_order + 1 
-    ORDER BY id_travel, p1.visiting_order;
+    ORDER BY id_travel, p1.visiting_order
 
 /*  deux requetes equivalentes exprimant une condition de totalite, l'une avec des sous requetes correlees et l'autre avec de l'agregation*/
 /*1*/
@@ -68,3 +76,6 @@ requetes (dans l'esprit de ce qui a ete presente en cours) afin qu'elles retourn
 /*1*/
 
 /*2*/
+
+/*une requete recursive (par exemple pour reconstituer le trajet effectue par un certain bateau sur un laps de temps 
+recouvrant des voyages differents).*/

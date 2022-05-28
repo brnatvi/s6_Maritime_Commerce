@@ -75,7 +75,7 @@ CREATE TABLE ship (
     id_type INT,
     nationality INT,
     volume_hold INT NOT NULL CHECK (volume_hold > 0),
-    nb_places_passagers INT NOT NULL CHECK (nb_places_passagers > 0),  
+    nb_places_passagers INT CHECK (nb_places_passagers >= 0) DEFAULT 0,  
     localisation NUMERIC(20,10),
     FOREIGN KEY (id_type) REFERENCES type_ship (id_type),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
@@ -96,6 +96,8 @@ CREATE TABLE travel (
     id_ship INT,
     class VARCHAR(20) CHECK (class IN ('Europe', 'America', 'Asia', 'Africa', 'Intercontinental')),
     tr_type VARCHAR(20) CHECK (class IN ('court', 'medium', 'long')),
+    date_departure DATE,
+    date_arrival DATE,
     FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
 );
 
@@ -113,8 +115,7 @@ CREATE TABLE step (
     CONSTRAINT respect_date CHECK (date_arrival <= date_departure)    
 );
 
-CREATE TABLE cargo_step (
-    id_cargo_step SERIAL PRIMARY KEY,
+CREATE TABLE cargo_step (    
     id_step INT,
     id_product INT,
     load_unload VARCHAR(10) CHECK (load_unload IN ('load', 'unload')),
@@ -123,8 +124,7 @@ CREATE TABLE cargo_step (
     FOREIGN KEY (id_step) REFERENCES step (id_step)
 );
 
-CREATE TABLE cargo_port (
-    id_cargo_port SERIAL PRIMARY KEY,
+CREATE TABLE cargo_port (    
     id_port INT,
     id_product INT,      
     quantity INT,
@@ -135,5 +135,5 @@ CREATE TABLE cargo_port (
 
 \i views.sql
 \i triggers.sql
-/* \i uploads.sql  */
 \i rules.sql
+/* \i uploads.sql  */
