@@ -131,10 +131,11 @@ CREATE TABLE cargo_port (
     quantity INT,                                                                       /* number of unities of product */
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_port) REFERENCES port (id_port)
-);
+);             
 
-
-\i views.sql
 \i triggers.sql
+\i uploads.sql
+\i views.sql
+
 \i rules.sql
-\i uploads.sql  
+

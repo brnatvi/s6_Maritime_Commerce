@@ -11,7 +11,7 @@
 \COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);
 \COPY product(id_product, name_product, is_dry, volume_product, weight_product) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
 \COPY travel (id_travel, id_ship, class, tr_type, date_departure, date_arrival) FROM 'csv/travel.csv' (DELIMITER ',', FORMAT CSV);
-
+\COPY step(id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, nb_passagers_in, nb_passagers_out)  FROM 'csv/step.csv' (DELIMITER ',', FORMAT CSV);
 
 \COPY cargo_step (id_step, id_product, load_unload, quantity) FROM 'csv/cargo_step.csv' (DELIMITER ',', FORMAT CSV);
 \COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);

@@ -124,52 +124,7 @@ CREATE TABLE cargo_port (
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_port) REFERENCES port (id_port)
 );
-
-\COPY continent(id_continent, name_continent) FROM 'csv/continent.csv' (DELIMITER ',', FORMAT CSV);
-\COPY country(id_country, name_country) FROM 'csv/country.csv' (DELIMITER ',', FORMAT CSV);
-\COPY type_ship(id_type, name_type, category_ship, speed) FROM 'csv/category_ship.csv' (DELIMITER ',', FORMAT CSV);
-\COPY port(id_port, name_port, category_port, id_continent, nationality) FROM 'csv/port.csv' (DELIMITER ',', FORMAT CSV);
-\COPY country_relations(id_country1, id_country2, relation) FROM 'csv/country_relations.csv' (DELIMITER ',', FORMAT CSV);
-\COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances.csv' (DELIMITER ',', FORMAT CSV);
-
-
-
-\COPY product(id_product, name_product, is_dry, volume_product, weight_product) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
-\COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);
-\COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);
-
-
-
-INSERT INTO travel (id_travel, id_ship) VALUES (1, 2);
-INSERT INTO travel (id_travel, id_ship) VALUES (2, 1);
-INSERT INTO travel (id_travel, id_ship) VALUES (3, 1);
-
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 1, 0, null, '2021-01-12');
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 2, 1, '2021-05-20', '2021-05-22');
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 3, 2, '2021-07-27', null);
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (2, 4, 0, null, '2021-02-13');
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (2, 5, 1, '2021-02-27', null);
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (3, 7, 0, null, '2022-01-12');
-INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (3, 6, 1, '2022-05-27', null);
-
-
-
-INSERT INTO cargo_step VALUES (1, 10, 'load', 30);
-INSERT INTO cargo_step VALUES (1, 10, 'unload', 10);
-INSERT INTO cargo_step VALUES (1, 3, 'load', 30);
-INSERT INTO cargo_step VALUES (1, 7, 'unload', 3);
-INSERT INTO cargo_step VALUES (1, 9, 'load', 20);
-INSERT INTO cargo_step VALUES (1, 9, 'unload', 8);
-INSERT INTO cargo_step VALUES (2, 10, 'load', 30);
-INSERT INTO cargo_step VALUES (2, 10, 'unload', 10);
-INSERT INTO cargo_step VALUES (2, 3, 'load', 10);
-INSERT INTO cargo_step VALUES (2, 7, 'unload', 3);
-INSERT INTO cargo_step VALUES (3, 10, 'unload', 30);
-INSERT INTO cargo_step VALUES (3, 10, 'load', 10);
-INSERT INTO cargo_step VALUES (3, 3, 'unload', 10);
-INSERT INTO cargo_step VALUES (3, 7, 'load', 3);
-
-
+\i uploads.sql
 
 /* ======================================= IMPORTANT : distances + reverse distances ======================================== */
 CREATE OR REPLACE VIEW view_distances AS 
@@ -235,9 +190,6 @@ UPDATE travel SET date_arrival = A.dates FROM (SELECT id_travel, date_arrival FR
 
 
 
-
-
-
 /*============================================= IMPORTANT data about each ship ============================================================================ */
 CREATE OR REPLACE VIEW view_data_ships AS 
 (
@@ -273,13 +225,16 @@ CREATE OR REPLACE VIEW view_not_between_belligerent AS
 (
     SELECT DISTINCT CR1.id_country1, CR2.id_country2, CR1.relation, p1.id_port AS id_port1, p1.name_port AS name_port1, p2.id_port AS id_port2, p2.name_port AS name_port2, d.distance
     FROM country_relations CR1 
-    JOIN country_relations CR2 USING (id_country1) 
+    JOIN country_relations CR2 USING (id_country2) 
     LEFT JOIN port p1 ON (CR1.id_country1 = p1.nationality) 
     LEFT JOIN port p2 ON (CR2.id_country2 = p2.nationality) 
     LEFT JOIN view_distances d ON (p1.id_port = d.id_port1 AND p2.id_port = d.id_port2)
-    WHERE CR1.relation <> 'belligerent' AND p1.id_port <> p2.id_port
+    WHERE CR1.relation <> 'belligerent'  AND p1.id_port <> p2.id_port
     ORDER BY CR1.id_country1
 );
+
+SELECT * FROM view_not_between_belligerent WHERE relation = 'ally commercial';
+
 
 CREATE OR REPLACE VIEW view_preferences_ally_commercial AS
 (
@@ -295,3 +250,51 @@ CREATE OR REPLACE VIEW view_preferences_ally_commercial AS
 
 
 /*	La durée d’un voyage est définie par : vitesse_navire * SUM ALL ( distances intermédiaires de son voyage) / ( 0.5*SUM ALL(poids_produit)).*/
+
+
+/*
+\COPY continent(id_continent, name_continent) FROM 'csv/continent.csv' (DELIMITER ',', FORMAT CSV);
+\COPY country(id_country, name_country) FROM 'csv/country.csv' (DELIMITER ',', FORMAT CSV);
+\COPY type_ship(id_type, name_type, category_ship, speed) FROM 'csv/category_ship.csv' (DELIMITER ',', FORMAT CSV);
+\COPY port(id_port, name_port, category_port, id_continent, nationality) FROM 'csv/port.csv' (DELIMITER ',', FORMAT CSV);
+\COPY country_relations(id_country1, id_country2, relation) FROM 'csv/country_relations.csv' (DELIMITER ',', FORMAT CSV);
+\COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances.csv' (DELIMITER ',', FORMAT CSV);
+
+
+
+\COPY product(id_product, name_product, is_dry, volume_product, weight_product) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
+\COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);
+\COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);
+
+
+
+INSERT INTO travel (id_travel, id_ship) VALUES (1, 2);
+INSERT INTO travel (id_travel, id_ship) VALUES (2, 1);
+INSERT INTO travel (id_travel, id_ship) VALUES (3, 1);
+
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 1, 0, null, '2021-01-12');
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 2, 1, '2021-05-20', '2021-05-22');
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (1, 3, 2, '2021-07-27', null);
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (2, 4, 0, null, '2021-02-13');
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (2, 5, 1, '2021-02-27', null);
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (3, 7, 0, null, '2022-01-12');
+INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (3, 6, 1, '2022-05-27', null);
+
+
+
+INSERT INTO cargo_step VALUES (1, 10, 'load', 30);
+INSERT INTO cargo_step VALUES (1, 10, 'unload', 10);
+INSERT INTO cargo_step VALUES (1, 3, 'load', 30);
+INSERT INTO cargo_step VALUES (1, 7, 'unload', 3);
+INSERT INTO cargo_step VALUES (1, 9, 'load', 20);
+INSERT INTO cargo_step VALUES (1, 9, 'unload', 8);
+INSERT INTO cargo_step VALUES (2, 10, 'load', 30);
+INSERT INTO cargo_step VALUES (2, 10, 'unload', 10);
+INSERT INTO cargo_step VALUES (2, 3, 'load', 10);
+INSERT INTO cargo_step VALUES (2, 7, 'unload', 3);
+INSERT INTO cargo_step VALUES (3, 10, 'unload', 30);
+INSERT INTO cargo_step VALUES (3, 10, 'load', 10);
+INSERT INTO cargo_step VALUES (3, 3, 'unload', 10);
+INSERT INTO cargo_step VALUES (3, 7, 'load', 3);
+
+*/

@@ -41,7 +41,7 @@ CREATE OR REPLACE VIEW view_not_between_belligerent AS
 (
     SELECT DISTINCT CR1.id_country1, CR2.id_country2, CR1.relation, p1.id_port AS id_port1, p1.name_port AS name_port1, p2.id_port AS id_port2, p2.name_port AS name_port2, d.distance
     FROM country_relations CR1 
-    JOIN country_relations CR2 USING (id_country1) 
+    JOIN country_relations CR2 USING (id_country2) 
     LEFT JOIN port p1 ON (CR1.id_country1 = p1.nationality) 
     LEFT JOIN port p2 ON (CR2.id_country2 = p2.nationality) 
     LEFT JOIN view_distances d ON (p1.id_port = d.id_port1 AND p2.id_port = d.id_port2)
