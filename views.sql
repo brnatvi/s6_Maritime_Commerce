@@ -148,7 +148,7 @@ CREATE VIEW view_data_ships AS
 /*====================================== END definition of class for travel ====================================================*/
 
 
-/*============================================= IMPORTANT data about each ship ============================================================================ */
+/*============================================= data about each ship ============================================================================ */
 CREATE VIEW view_data_ships AS 
 (
     SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship

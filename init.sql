@@ -98,7 +98,8 @@ CREATE TABLE travel (
     tr_type VARCHAR(20) CHECK (tr_type IN ('court', 'medium', 'long')),
     date_departure DATE,
     date_arrival DATE,
-    FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
+    FOREIGN KEY (id_ship) REFERENCES ship (id_ship),
+    CONSTRAINT respect_dates CHECK (date_departure <= date_arrival)
 );
 
 CREATE TABLE step (
@@ -112,8 +113,7 @@ CREATE TABLE step (
     nb_passagers_out INT DEFAULT 0 CHECK (nb_passagers_out >= 0),
     FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
     FOREIGN KEY (id_port) REFERENCES port (id_port),
-    CONSTRAINT respect_date CHECK (date_arrival <= date_departure),
-    CONSTRAINT passagers_depart CHECK (visiting_order = 0 AND nb_passagers_out = 0 AND nb_passagers_in <> 0)
+    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)
 );
 
 CREATE TABLE cargo_step (    

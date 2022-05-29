@@ -101,9 +101,9 @@ CREATE TABLE step (
     visiting_order INT CHECK (visiting_order >= 0),
     date_arrival DATE,
     date_departure DATE,   
-    FOREIGN KEY (id_port) REFERENCES port (id_port) ,
     FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
-    CONSTRAINT respect_date CHECK (date_arrival <= date_departure) 
+    FOREIGN KEY (id_port) REFERENCES port (id_port),
+    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)  
 );
 
 
