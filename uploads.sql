@@ -8,4 +8,6 @@
 \COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances_ports.csv' (DELIMITER ',', FORMAT CSV);
 \COPY type_ship(id_type, name_type, category_ship, speed) FROM 'csv/category_ship.csv' (DELIMITER ',', FORMAT CSV);
 \COPY product(id_product, name_product, is_dry, weight_product, price_kilo) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
-\COPY distances_ports(id_port1, id_port2, distance) FROM '/csv/distances.csv' (DELIMITER ',', FORMAT CSV);
+\COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances.csv' (DELIMITER ',', FORMAT CSV);
+\COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);
+\COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);

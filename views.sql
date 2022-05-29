@@ -37,15 +37,17 @@ CREATE OR REPLACE VIEW view_distances_etaps AS
 );
 
 /* ======================================= BEGIN definition of tr_type for travel =================================================== */
-CREATE OR REPLACE VIEW view_total_dist_trips AS 
-(
-    SELECT id_travel, sum(distance) FROM view_distances_etaps GROUP BY id_travel
-);
 
-/* Set attribute tr_type in table travel */
-UPDATE travel SET tr_type = 'court' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 < 1000);
-UPDATE travel SET tr_type = 'medium' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 >= 1000 AND B.sum1 <= 2000);
-UPDATE travel SET tr_type = 'long' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 > 2000);
+        CREATE OR REPLACE VIEW view_total_dist_trips AS 
+        (
+            SELECT id_travel, sum(distance) FROM view_distances_etaps GROUP BY id_travel
+        );
+
+        /* Set attribute tr_type in table travel */
+        UPDATE travel SET tr_type = 'court' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 < 1000);
+        UPDATE travel SET tr_type = 'medium' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 >= 1000 AND B.sum1 <= 2000);
+        UPDATE travel SET tr_type = 'long' FROM (SELECT * FROM view_total_dist_trips) AS B(id1, sum1) WHERE (id_travel = B.id1 AND B.sum1 > 2000);
+
 /* ======================================= END definition of tr_type for travel =================================================== */
 
 
@@ -65,55 +67,74 @@ CREATE VIEW view_data_ships AS
 
 
 /*===================================== BEGIN definition of class for travel ====================================================*/
-/* continent for each step*/
-CREATE OR REPLACE VIEW view_continents_steps AS 
-(
-    SELECT step.id_travel, port.id_port, continent.id_continent, visiting_order FROM continent 
-    NATURAL JOIN port 
-    JOIN step ON port.id_port = step.id_port
-);
 
-CREATE OR REPLACE VIEW view_nb_continents_diff AS 
-(
-    SELECT id_travel, COUNT(DISTINCT id_continent) AS nb_cont 
-    FROM view_continents_steps 
-    GROUP BY id_travel
-);
+        /* continent for each step*/
+        CREATE OR REPLACE VIEW view_continents_steps AS 
+        (
+            SELECT step.id_travel, port.id_port, continent.id_continent, visiting_order FROM continent 
+            NATURAL JOIN port 
+            JOIN step ON port.id_port = step.id_port
+        );
 
-/* id_travel and class */
-CREATE OR REPLACE VIEW view_idTravel_class AS 
-(
-    SELECT step.id_travel, name_continent AS travel_class 
-    FROM view_nb_continents_diff 
-    NATURAL JOIN step 
-    NATURAL JOIN port 
-    NATURAL JOIN continent
-);
+        CREATE OR REPLACE VIEW view_nb_continents_diff AS 
+        (
+            SELECT id_travel, COUNT(DISTINCT id_continent) AS nb_cont 
+            FROM view_continents_steps 
+            GROUP BY id_travel
+        );
 
-CREATE OR REPLACE VIEW new_view AS 
-(
-    SELECT id_travel, travel_class, count(*) AS nb_steps FROM view_idTravel_class 
-    GROUP BY id_travel, travel_class 
-);
+        /* id_travel and class */
+        CREATE OR REPLACE VIEW view_idTravel_class AS 
+        (
+            SELECT step.id_travel, name_continent AS travel_class 
+            FROM view_nb_continents_diff 
+            NATURAL JOIN step 
+            NATURAL JOIN port 
+            NATURAL JOIN continent
+        );
 
-/* Set attribute class in table travel */
-/*====================================== IMPORTANT only national travels =========================================================*/
-CREATE OR REPLACE VIEW view_not_intercontinental AS
-WITH nonDuplicatedValues AS (
-        SELECT id_travel, COUNT(id_travel) AS CNT
-        FROM new_view
-        GROUP BY id_travel
-        HAVING COUNT(id_travel) = 1
-   )
-   SELECT id_travel, travel_class
-   FROM new_view
-   WHERE id_travel IN (SELECT id_travel FROM nonDuplicatedValues)
-   ORDER BY id_travel, travel_class;
+        CREATE OR REPLACE VIEW new_view AS 
+        (
+            SELECT id_travel, travel_class, count(*) AS nb_steps FROM view_idTravel_class 
+            GROUP BY id_travel, travel_class 
+        );
 
-UPDATE travel SET class = A.newVal2 FROM (SELECT id_travel, travel_class FROM view_not_intercontinental) AS A(newVal1, newVal2) 
-WHERE id_travel = A.newVal1;
+        /* Set attribute class in table travel */
+        /*====================================== IMPORTANT only national travels =========================================================*/
+        CREATE OR REPLACE VIEW view_not_intercontinental AS
+        WITH nonDuplicatedValues AS (
+                SELECT id_travel, COUNT(id_travel) AS CNT
+                FROM new_view
+                GROUP BY id_travel
+                HAVING COUNT(id_travel) = 1
+           )
+           SELECT id_travel, travel_class
+           FROM new_view
+           WHERE id_travel IN (SELECT id_travel FROM nonDuplicatedValues)
+           ORDER BY id_travel, travel_class;
 
-UPDATE travel SET class = 'Intercontinental' WHERE class IS NULL;
+        UPDATE travel SET class = A.newVal2 FROM (SELECT id_travel, travel_class FROM view_not_intercontinental) AS A(newVal1, newVal2) 
+        WHERE id_travel = A.newVal1;
+
+        UPDATE travel SET class = 'Intercontinental' WHERE class IS NULL;
+
 /*====================================== END definition of class for travel ====================================================*/
 
 
+/*============================================= IMPORTANT data about each ship ============================================================================ */
+CREATE VIEW view_data_ships AS 
+(
+    SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
+);
+
+
+/* ============================================= cargo_step calculations ======================================================================== */
+CREATE OR REPLACE VIEW view_etaps_load_unload AS 
+(
+    SELECT S.id_step, S.id_travel, S.id_port, S.visiting_order, S.date_arrival, S.date_departure, CS.id_product, CS.load_unload, CS.quantity FROM step S LEFT JOIN cargo_step CS ON CS.id_step = S.id_step
+);
+/*========================================== IMPORTANT quantity load and unload for each step =================================================== */
+CREATE OR REPLACE VIEW view_etaps_quantity_load_unload AS 
+(
+SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival, c1.date_departure, c1.id_product, c1.quantity AS quantity_load, c2.quantity AS quantity_unload FROM view_etaps_load_unload c1 LEFT JOIN view_etaps_load_unload c2 ON (c1.id_product = c2.id_product AND c1.id_step = c2.id_step AND c1.quantity <> c2.quantity) WHERE c1.load_unload = 'load' ORDER BY c1.id_travel, c1.id_step;
+);

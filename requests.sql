@@ -31,7 +31,18 @@ UPDATE travel SET date_departure = A.dates FROM (SELECT id_travel, date_departur
 
 /*  une sous-requete dans le WHERE;*/
 
-
+/*SELECT DISTINCT S.cinema,
+    (
+        SELECT MAX(F.duree) FROM Film F WHERE F.titre=S.titre) as maxi
+        FROM Séance S
+        WHERE (
+            SELECT COUNT(DISTINCT titre) FROM Film F1
+            WHERE F1.titre IN (SELECT S1.titre
+            FROM Séance S1
+            WHERE S1.cinema=S.cinema
+            )
+    )>5;
+*/
 
 
 /*  deux agregats necessitant GROUP BY et HAVING ;*/
@@ -54,7 +65,12 @@ GROUP BY id_travel;
 
 /*  une requete impliquant le calcul de deux agregats (par exemple, les moyennes d'un ensemble de maximums)*/
 
-
+/*SELECT AVG(duree) FROM
+    (
+        SELECT MAX(duree) as duree
+        FROM Film
+        GROUP BY realisateur
+    ) AS foo ;*/
 
 
 /*  une jointure externe (LEFT JOIN, RIGHT JOIN ou FULL JOIN) ; */

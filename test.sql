@@ -117,19 +117,13 @@ CREATE TABLE cargo_step (
 );
 
 
-/*
-INSERT INTO continent VALUES (1, 'Europe');
-INSERT INTO continent VALUES (2, 'Asia');
-INSERT INTO continent VALUES (3, 'Africa');
-
-INSERT INTO port (id_continent) VALUES (1);
-INSERT INTO port (id_continent) VALUES (1);
-INSERT INTO port (id_continent) VALUES (1);
-INSERT INTO port (id_continent) VALUES (2);
-INSERT INTO port (id_continent) VALUES (1);
-INSERT INTO port (id_continent) VALUES (3);
-INSERT INTO port (id_continent) VALUES (3);
-*/
+CREATE TABLE cargo_port (    
+    id_port INT,
+    id_product INT,      
+    quantity INT,                                                                       /* number of unities of product */
+    FOREIGN KEY (id_product) REFERENCES product (id_product),
+    FOREIGN KEY (id_port) REFERENCES port (id_port)
+);
 
 \COPY continent(id_continent, name_continent) FROM 'csv/continent.csv' (DELIMITER ',', FORMAT CSV);
 \COPY country(id_country, name_country) FROM 'csv/country.csv' (DELIMITER ',', FORMAT CSV);
@@ -137,32 +131,12 @@ INSERT INTO port (id_continent) VALUES (3);
 \COPY port(id_port, name_port, category_port, id_continent, nationality) FROM 'csv/port.csv' (DELIMITER ',', FORMAT CSV);
 \COPY country_relations(id_country1, id_country2, relation) FROM 'csv/country_relations.csv' (DELIMITER ',', FORMAT CSV);
 \COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances.csv' (DELIMITER ',', FORMAT CSV);
-/*INSERT INTO distances_ports VALUES (1, 2, 15);
-INSERT INTO distances_ports VALUES (1, 3, 21);
-INSERT INTO distances_ports VALUES (1, 4, 32);
-INSERT INTO distances_ports VALUES (1, 5, 19);
-INSERT INTO distances_ports VALUES (1, 6, 12);
-INSERT INTO distances_ports VALUES (1, 7, 5);
-INSERT INTO distances_ports VALUES (2, 3, 32);
-INSERT INTO distances_ports VALUES (2, 4, 12);
-INSERT INTO distances_ports VALUES (2, 5, 32);
-INSERT INTO distances_ports VALUES (2, 6, 18);
-INSERT INTO distances_ports VALUES (2, 7, 21);
-INSERT INTO distances_ports VALUES (3, 4, 21);
-INSERT INTO distances_ports VALUES (3, 5, 23);
-INSERT INTO distances_ports VALUES (3, 6, 13);
-INSERT INTO distances_ports VALUES (3, 7, 17);
-INSERT INTO distances_ports VALUES (4, 5, 22);
-INSERT INTO distances_ports VALUES (4, 6, 34);
-INSERT INTO distances_ports VALUES (4, 7, 16);
-INSERT INTO distances_ports VALUES (5, 6, 45);
-INSERT INTO distances_ports VALUES (5, 7, 43);
-INSERT INTO distances_ports VALUES (6, 7, 12);*/
+
 
 \COPY product(id_product, name_product, is_dry, weight_product, price_kilo) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
+\COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);
+\COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);
 
-INSERT INTO ship VALUES (1, null, 2, 3, 450, 12, null);
-INSERT INTO ship VALUES (2, null, 5, 3, 150, 9, null);
 
 
 INSERT INTO travel (id_travel, id_ship) VALUES (1, 2);
@@ -178,6 +152,21 @@ INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departur
 INSERT INTO step(id_travel, id_port, visiting_order, date_arrival, date_departure) VALUES (3, 6, 1, '2022-05-27', null);
 
 
+
+INSERT INTO cargo_step VALUES (1, 10, 'load', 30);
+INSERT INTO cargo_step VALUES (1, 10, 'unload', 10);
+INSERT INTO cargo_step VALUES (1, 3, 'load', 30);
+INSERT INTO cargo_step VALUES (1, 7, 'unload', 3);
+INSERT INTO cargo_step VALUES (1, 9, 'load', 20);
+INSERT INTO cargo_step VALUES (1, 9, 'unload', 8);
+INSERT INTO cargo_step VALUES (2, 10, 'load', 30);
+INSERT INTO cargo_step VALUES (2, 10, 'unload', 10);
+INSERT INTO cargo_step VALUES (2, 3, 'load', 10);
+INSERT INTO cargo_step VALUES (2, 7, 'unload', 3);
+INSERT INTO cargo_step VALUES (3, 10, 'unload', 30);
+INSERT INTO cargo_step VALUES (3, 10, 'load', 10);
+INSERT INTO cargo_step VALUES (3, 3, 'unload', 10);
+INSERT INTO cargo_step VALUES (3, 7, 'load', 3);
 
 
 
@@ -234,7 +223,6 @@ UPDATE travel SET tr_type = 'long' FROM (SELECT * FROM view_total_dist_trips) AS
 
 /*=============================================================================*/
 
-
 CREATE OR REPLACE VIEW view_travel_dep_arr AS 
 (
     SELECT id_travel, min(date_departure) AS date_departure, max(date_arrival) AS date_arrival
@@ -245,9 +233,32 @@ UPDATE travel SET date_departure = A.dates FROM (SELECT id_travel, date_departur
 UPDATE travel SET date_arrival = A.dates FROM (SELECT id_travel, date_arrival FROM view_travel_dep_arr) AS A(id, dates) WHERE (id_travel = A.id);
 
 
+
+
+
+
+/*============================================= IMPORTANT data about each ship ============================================================================ */
 CREATE VIEW view_data_ships AS 
 (
-    SELECT id_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
+    SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
 );
+
+
+
+/* ============================================= cargo_step calculations ======================================================================== */
+CREATE OR REPLACE VIEW view_etaps_load_unload AS 
+(
+    SELECT S.id_step, S.id_travel, S.id_port, S.visiting_order, S.date_arrival, S.date_departure, CS.id_product, CS.load_unload, CS.quantity FROM step S LEFT JOIN cargo_step CS ON CS.id_step = S.id_step
+);
+/*========================================== IMPORTANT quantity load and unload for each step =================================================== */
+CREATE OR REPLACE VIEW view_etaps_quantity_load_unload AS 
+(
+SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival, c1.date_departure, c1.id_product, c1.quantity AS quantity_load, c2.quantity AS quantity_unload FROM view_etaps_load_unload c1 LEFT JOIN view_etaps_load_unload c2 ON (c1.id_product = c2.id_product AND c1.id_step = c2.id_step AND c1.quantity <> c2.quantity) WHERE c1.load_unload = 'load' ORDER BY c1.id_travel, c1.id_step
+);
+
+
+
+
+
 
 /*	La durée d’un voyage est définie par : vitesse_navire * SUM ALL ( distances intermédiaires de son voyage) / ( 0.5*SUM ALL(poids_produit)).*/
