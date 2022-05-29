@@ -75,7 +75,7 @@ CREATE TABLE ship (
     id_type INT,
     nationality INT,
     volume_hold INT NOT NULL CHECK (volume_hold > 0),
-    nb_places_passagers INT CHECK (nb_places_passagers >= 0) DEFAULT 0,  
+    nb_places_passagers INT CHECK (nb_places_passagers > 0),  
     localisation NUMERIC(20,10),
     FOREIGN KEY (id_type) REFERENCES type_ship (id_type),
     FOREIGN KEY (nationality) REFERENCES country (id_country)
@@ -95,7 +95,7 @@ CREATE TABLE travel (
     id_travel SERIAL PRIMARY KEY,
     id_ship INT,
     class VARCHAR(20) CHECK (class IN ('Europe', 'America', 'Asia', 'Africa', 'Intercontinental')),
-    tr_type VARCHAR(20) CHECK (class IN ('court', 'medium', 'long')),
+    tr_type VARCHAR(20) CHECK (tr_type IN ('court', 'medium', 'long')),
     date_departure DATE,
     date_arrival DATE,
     FOREIGN KEY (id_ship) REFERENCES ship (id_ship) 
@@ -112,7 +112,8 @@ CREATE TABLE step (
     nb_passagers_out INT DEFAULT 0 CHECK (nb_passagers_out >= 0),
     FOREIGN KEY (id_travel) REFERENCES travel (id_travel),
     FOREIGN KEY (id_port) REFERENCES port (id_port),
-    CONSTRAINT respect_date CHECK (date_arrival <= date_departure)    
+    CONSTRAINT respect_date CHECK (date_arrival <= date_departure),
+    CONSTRAINT passagers_depart CHECK (visiting_order = 0 AND nb_passagers_out = 0 AND nb_passagers_in <> 0)
 );
 
 CREATE TABLE cargo_step (    
