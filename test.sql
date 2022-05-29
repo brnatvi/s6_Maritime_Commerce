@@ -79,8 +79,8 @@ CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
     name_product VARCHAR(20),
     is_dry BOOLEAN,    
-    weight_product NUMERIC(4,1) CHECK (weight_product > 0),
-    price_kilo NUMERIC(4,1) CHECK (price_kilo > 0)
+    volume_product NUMERIC(7,3) CHECK (volume_product > 0),    /* volume for 1 unity */
+    weight_product NUMERIC(7,3) CHECK (weight_product > 0)     /* weight for 1 unity */
 );
 
 
@@ -133,7 +133,8 @@ CREATE TABLE cargo_port (
 \COPY distances_ports(id_port1, id_port2, distance) FROM 'csv/distances.csv' (DELIMITER ',', FORMAT CSV);
 
 
-\COPY product(id_product, name_product, is_dry, weight_product, price_kilo) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
+
+\COPY product(id_product, name_product, is_dry, volume_product, weight_product) FROM 'csv/product.csv' (DELIMITER ',', FORMAT CSV);
 \COPY ship (id_ship, name_ship, id_type, nationality, volume_hold, nb_places_passagers, localisation) FROM 'csv/ship.csv' (DELIMITER ',', FORMAT CSV);
 \COPY cargo_port(id_port, id_product, quantity)  FROM 'csv/cargo_port.csv' (DELIMITER ',', FORMAT CSV);
 
@@ -238,7 +239,7 @@ UPDATE travel SET date_arrival = A.dates FROM (SELECT id_travel, date_arrival FR
 
 
 /*============================================= IMPORTANT data about each ship ============================================================================ */
-CREATE VIEW view_data_ships AS 
+CREATE OR REPLACE VIEW view_data_ships AS 
 (
     SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
 );
@@ -259,11 +260,11 @@ SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival,
 
 CREATE OR REPLACE VIEW view1 AS 
 (
-SELECT id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, id_product, (quantity_load - COALESCE(quantity_unload, 0)) AS total_etap_prod 
+SELECT id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, id_product, (quantity_load - COALESCE(quantity_unload, 0)) AS quantity_added_on 
 FROM view_etaps_quantity_load_unload
 );
 
-SELECT id_step, id_product, sum(total_etap_prod) FROM view1 GROUP BY id_step, id_product;
+SELECT id_step, id_product, sum(quantity_added_on) FROM view1 GROUP BY id_step, id_product;
 
 
 
@@ -284,11 +285,11 @@ CREATE OR REPLACE VIEW view_preferences_ally_commercial AS
 (
     SELECT DISTINCT CR1.id_country1, CR2.id_country2, CR1.relation, p1.id_port AS id_port1, p1.name_port AS name_port1, p2.id_port AS id_port2, p2.name_port AS name_port2, d.distance
     FROM country_relations CR1 
-    JOIN country_relations CR2 USING (id_country2) 
+    JOIN country_relations CR2 USING (id_country1) 
     LEFT JOIN port p1 ON (CR1.id_country1 = p1.nationality) 
     LEFT JOIN port p2 ON (CR2.id_country2 = p2.nationality) 
     LEFT JOIN view_distances d ON (p1.id_port = d.id_port1 AND p2.id_port = d.id_port2)
-    WHERE CR1.relation = 'ally commercial'
+    WHERE CR1.relation = 'ally commercial' AND p1.id_port <> p2.id_port
     ORDER BY CR1.id_country1
 );
 

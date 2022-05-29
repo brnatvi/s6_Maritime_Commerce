@@ -86,8 +86,8 @@ CREATE TABLE product (
     id_product SERIAL PRIMARY KEY,   
     name_product VARCHAR(20),
     is_dry BOOLEAN,    
-    volume_product NUMERIC(4,1) CHECK (volume_product > 0),    /* volume for 1 unity */
-    weight_product NUMERIC(4,1) CHECK (weight_product > 0)     /* weight for 1 unity */
+    volume_product NUMERIC(7,3) CHECK (volume_product > 0),    /* volume for 1 unity */
+    weight_product NUMERIC(7,3) CHECK (weight_product > 0)     /* weight for 1 unity */
 );
 
 
@@ -137,4 +137,4 @@ CREATE TABLE cargo_port (
 \i views.sql
 \i triggers.sql
 \i rules.sql
-/* \i uploads.sql  */
+\i uploads.sql  

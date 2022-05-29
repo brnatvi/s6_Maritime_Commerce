@@ -5,7 +5,7 @@
 CREATE OR REPLACE VIEW view_travel_dep_arr AS 
 (
     SELECT id_travel, min(date_departure) AS date_departure, max(date_arrival) AS date_arrival 
-    FROM step GROUP BY id_travel ORDER BY id_travel;
+    FROM step GROUP BY id_travel ORDER BY id_travel
 );
 
 /* Set attributes date_departure et date_arrival in table travel */
@@ -36,7 +36,6 @@ CREATE OR REPLACE VIEW view_distances_etaps AS
     ORDER BY id_travel, p1.visiting_order
 );
 
-
 /*==================================== IMPORTANT possibles and preferables destinations ==================================================*/
 CREATE OR REPLACE VIEW view_not_between_belligerent AS
 (
@@ -54,11 +53,11 @@ CREATE OR REPLACE VIEW view_preferences_ally_commercial AS
 (
     SELECT DISTINCT CR1.id_country1, CR2.id_country2, CR1.relation, p1.id_port AS id_port1, p1.name_port AS name_port1, p2.id_port AS id_port2, p2.name_port AS name_port2, d.distance
     FROM country_relations CR1 
-    JOIN country_relations CR2 USING (id_country2) 
+    JOIN country_relations CR2 USING (id_country1) 
     LEFT JOIN port p1 ON (CR1.id_country1 = p1.nationality) 
     LEFT JOIN port p2 ON (CR2.id_country2 = p2.nationality) 
     LEFT JOIN view_distances d ON (p1.id_port = d.id_port1 AND p2.id_port = d.id_port2)
-    WHERE CR1.relation = 'ally commercial'
+    WHERE CR1.relation = 'ally commercial' AND p1.id_port <> p2.id_port
     ORDER BY CR1.id_country1
 );
 
@@ -80,16 +79,12 @@ CREATE OR REPLACE VIEW view_preferences_ally_commercial AS
 
 /* ========================================== Duration of trip etap by etap =====================================================*/
 
-CREATE VIEW view_total_distances AS 
+CREATE OR REPLACE VIEW view_total_distances AS 
 (
     SELECT id_travel, SUM(distance) AS total_distance FROM view_distances_etaps 
     GROUP BY id_travel
 );
 /*	La durée d’un voyage est définie par : vitesse_navire * SUM ALL ( distances intermédiaires de son voyage) / ( 0.5*SUM ALL(poids_produit)).*/
-CREATE VIEW view_data_ships AS 
-(
-    SELECT id_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
-);
 
 
 
@@ -163,12 +158,11 @@ CREATE OR REPLACE VIEW view_etaps_load_unload AS
 /*========================================== IMPORTANT quantity load and unload for each step =================================================== */
 CREATE OR REPLACE VIEW view_etaps_quantity_load_unload AS 
 (
-SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival, c1.date_departure, c1.id_product, c1.quantity AS quantity_load, c2.quantity AS quantity_unload FROM view_etaps_load_unload c1 LEFT JOIN view_etaps_load_unload c2 ON (c1.id_product = c2.id_product AND c1.id_step = c2.id_step AND c1.quantity <> c2.quantity) WHERE c1.load_unload = 'load' ORDER BY c1.id_travel, c1.id_step;
+SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival, c1.date_departure, c1.id_product, c1.quantity AS quantity_load, c2.quantity AS quantity_unload FROM view_etaps_load_unload c1 LEFT JOIN view_etaps_load_unload c2 ON (c1.id_product = c2.id_product AND c1.id_step = c2.id_step AND c1.quantity <> c2.quantity) WHERE c1.load_unload = 'load' ORDER BY c1.id_travel, c1.id_step
 );
 
 CREATE OR REPLACE VIEW view1 AS 
 (
-SELECT id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, id_product, (quantity_load - COALESCE(quantity_unload, 0)) AS total_etap_prod 
-FROM view_etaps_quantity_load_unload;
+SELECT id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, id_product, (quantity_load - COALESCE(quantity_unload, 0)) AS quantity_added_on 
+FROM view_etaps_quantity_load_unload
 );
-
