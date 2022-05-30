@@ -143,26 +143,46 @@ CREATE OR REPLACE VIEW view_total_distances AS
 /*====================================== END definition of class for travel ====================================================*/
 
 
-/*============================================= data about each ship ============================================================================ */
-CREATE VIEW view_data_ships AS 
-(
-    SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
-);
-
-
 /* ============================================= cargo_step calculations ======================================================================== */
 CREATE OR REPLACE VIEW view_etaps_load_unload AS 
 (
-    SELECT S.id_step, S.id_travel, S.id_port, S.visiting_order, S.date_arrival, S.date_departure, CS.id_product, CS.load_unload, CS.quantity FROM step S LEFT JOIN cargo_step CS ON CS.id_step = S.id_step
+    SELECT S.id_step, S.id_travel, S.id_port, S.visiting_order, S.date_arrival, S.date_departure, CS.id_product, CS.load_unload, CS.quantity 
+    FROM step S 
+    LEFT JOIN cargo_step CS ON CS.id_step = S.id_step
+    ORDER BY id_travel, id_step
 );
 /*========================================== IMPORTANT quantity load and unload for each step =================================================== */
+
 CREATE OR REPLACE VIEW view_etaps_quantity_load_unload AS 
 (
-SELECT c1.id_step, c1.id_travel, c1.id_port, c1.visiting_order, c1.date_arrival, c1.date_departure, c1.id_product, c1.quantity AS quantity_load, c2.quantity AS quantity_unload FROM view_etaps_load_unload c1 LEFT JOIN view_etaps_load_unload c2 ON (c1.id_product = c2.id_product AND c1.id_step = c2.id_step AND c1.quantity <> c2.quantity) WHERE c1.load_unload = 'load' ORDER BY c1.id_travel, c1.id_step
+   (SELECT id_travel, id_step, id_port, visiting_order, date_arrival, 
+    date_departure, id_product, quantity
+    FROM view_etaps_load_unload WHERE load_unload = 'load'
+   )
+   UNION
+    (SELECT id_travel, id_step, id_port, visiting_order, date_arrival, 
+    date_departure, id_product, (-1)*quantity 
+    FROM view_etaps_load_unload WHERE load_unload = 'unload'
+   ) ORDER BY id_travel, id_step
+);
+CREATE OR REPLACE VIEW view_check_finish_all_unload AS 
+(
+    SELECT id_travel, sum(quantity) AS total_products
+    FROM view_etaps_quantity_load_unload 
+    GROUP BY id_travel ORDER BY id_travel
 );
 
-CREATE OR REPLACE VIEW view1 AS 
+/*================================ correspondace of port's ship's categories =================================================================== */
+
+CREATE OR REPLACE VIEW categories_correspondance AS
+WITH view_data_ships AS 
 (
-SELECT id_step, id_travel, id_port, visiting_order, date_arrival, date_departure, id_product, (quantity_load - COALESCE(quantity_unload, 0)) AS quantity_added_on 
-FROM view_etaps_quantity_load_unload
-);
+    SELECT id_ship, name_ship, speed, category_ship FROM ship NATURAL JOIN type_ship
+)
+SELECT T.id_travel, T.id_ship, category_ship, category_port, K.id_port, class, tr_type 
+FROM view_data_ships V 
+NATURAL JOIN travel T 
+LEFT JOIN view_etaps_quantity_load_unload K ON K.id_travel = T.id_travel
+LEFT JOIN port ON K.id_port = port.id_port
+ORDER BY id_travel;
+

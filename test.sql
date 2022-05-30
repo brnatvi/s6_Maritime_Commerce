@@ -124,6 +124,8 @@ CREATE TABLE cargo_port (
     FOREIGN KEY (id_product) REFERENCES product (id_product),
     FOREIGN KEY (id_port) REFERENCES port (id_port)
 );
+
+
 \i uploads.sql
 
 /* ======================================= IMPORTANT : distances + reverse distances ======================================== */
