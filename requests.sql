@@ -79,17 +79,49 @@ SELECT id_travel, p1.id_port AS port1, p2.id_port AS port2, d.distance
     ORDER BY id_travel, p1.visiting_order;
 
 /*  deux requetes equivalentes exprimant une condition de totalite, l'une avec des sous requetes correlees et l'autre avec de l'agregation*/
-/*1*/
-
-/*2*/
+/* 1 Les pays possédant au moins un navire */
+SELECT *                                                                                                                                              
+FROM country 
+WHERE EXISTS(
+    SELECT nationality FROM ship
+    WHERE country.id_country=ship.nationality
+);
+/* 2 */
+SELECT nationality, name_country 
+FROM ship
+JOIN country ON country.id_country=ship.nationality 
+GROUP BY nationality, name_country 
+HAVING COUNT(*) > 1;
 
 
 /*  deux requetes qui renverraient le meme resultat si vos tables de contenaient pas de nulls, mais qui renvoient
 des resultats differents ici (vos donnees devront donc contenir quelques nulls), vous proposerez egalement de petites modications de vos
 requetes (dans l'esprit de ce qui a ete presente en cours) afin qu'elles retournent le meme resultat */
-/*1*/
+/* 1 La somme des dates sous formes de chaine de caractère */
+SELECT SUM(
+    to_char(date_arrival, 'YYYYMMDD')::integer+to_char(date_departure, 'YYYYMMDD')::integer
+) FROM step;
+/* et */
+SELECT SUM(
+    to_char(date_arrival, 'YYYYMMDD')::integer)+SUM(to_char(date_departure, 'YYYYMMDD')::integer
+) FROM step;
+/* 2 version corrigé */
+SELECT SUM(
+    COALESCE(
+        to_char(date_arrival, 'YYYYMMDD')::integer,0
+    )+COALESCE(
+        to_char(date_departure, 'YYYYMMDD')::integer,0
+    )
+) FROM step;
+/* et */
+SELECT SUM(
+    COALESCE(
+        to_char(date_arrival, 'YYYYMMDD')::integer,0
+    ))+SUM(COALESCE(
+        to_char(date_departure, 'YYYYMMDD')::integer,0
+    ))
+) FROM step;
 
-/*2*/
 
 /*une requete recursive (par exemple pour reconstituer le trajet effectue par un certain bateau sur un laps de temps 
 recouvrant des voyages differents).*/
