@@ -1,4 +1,3 @@
-
 /* une requete qui porte sur au moins trois tables ;*/
 
 SELECT step.id_travel, name_continent AS travel_class 
@@ -8,7 +7,10 @@ NATURAL JOIN port
 NATURAL JOIN continent;
 
 /*  une 'auto jointure' (jointure de deux copies d'une meme table)*/
-
+/* le nom des pays ayant séparé de moins de 500km */
+SELECT c1.name_country AS pays_a, c2.name_country AS pays_b 
+FROM country c1, country c2, distances_ports p 
+WHERE p.id_port1=c1.id_country AND p.id_port2=c2.id_country AND distance <500;
 
 /*  une sous-requete correlee ;*/
 
@@ -29,21 +31,14 @@ ORDER BY id_travel;
 
 UPDATE travel SET date_departure = A.dates FROM (SELECT id_travel, date_departure FROM view_travel_dep_arr) AS A(id, dates) WHERE (id_travel = A.id);
 
-/*  une sous-requete dans le WHERE;*/
-
-/*SELECT DISTINCT S.cinema,
-    (
-        SELECT MAX(F.duree) FROM Film F WHERE F.titre=S.titre) as maxi
-        FROM Séance S
-        WHERE (
-            SELECT COUNT(DISTINCT titre) FROM Film F1
-            WHERE F1.titre IN (SELECT S1.titre
-            FROM Séance S1
-            WHERE S1.cinema=S.cinema
-            )
-    )>5;
-*/
-
+/*  une sous-requete dans le WHERE; :: récupère les produits avec le volume le plus élevé */
+SELECT *
+FROM product p1 
+WHERE NOT EXISTS (
+    SELECT * 
+    FROM product p2 
+    WHERE p1.volume_product < p2.volume_product
+);
 
 /*  deux agregats necessitant GROUP BY et HAVING ;*/
 /*1*/
@@ -64,13 +59,12 @@ FROM continents_steps
 GROUP BY id_travel;
 
 /*  une requete impliquant le calcul de deux agregats (par exemple, les moyennes d'un ensemble de maximums)*/
-
-/*SELECT AVG(duree) FROM
-    (
-        SELECT MAX(duree) as duree
-        FROM Film
-        GROUP BY realisateur
-    ) AS foo ;*/
+/* La moyenne du nombre des articles les plus présent dans les ports */
+SELECT AVG(max)::INTEGER FROM(
+    SELECT id_port, MAX(quantity) 
+    FROM cargo_port 
+    GROUP BY id_port
+) AS foo;
 
 
 /*  une jointure externe (LEFT JOIN, RIGHT JOIN ou FULL JOIN) ; */
