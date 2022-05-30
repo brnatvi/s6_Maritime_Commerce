@@ -178,3 +178,11 @@ NATURAL JOIN (
     ) AS FOO 
     WHERE speed=max) AS BAR
 JOIN country ON nationality=id_country;
+
+/* La liste des ports et leurs nombres de visites */
+SELECT name_port, count 
+FROM port JOIN (
+    SELECT id_port, COUNT(*) 
+    FROM step 
+    GROUP BY id_port
+) AS FOO ON FOO.id_port=port.id_port;
