@@ -30,16 +30,12 @@ ORDER BY id_travel;
 /*  une sous-requete dans le FROM;*/
 /* Le classe et le type du premier voyage réalisé */
 SELECT class, tr_type FROM (
-    SELECT * 
-    FROM view_travel_dep_arr NATURAL 
-    JOIN travel 
+    SELECT * FROM (SELECT id_travel, min(date_departure) AS date_departure, max(date_arrival) AS date_arrival 
+    FROM step GROUP BY id_travel ORDER BY id_travel) AS A
+    NATURAL JOIN travel 
     ORDER BY date_departure
 ) AS foo LIMIT 1;
 
-/* Upate a partir d'une autre table */
-UPDATE travel SET date_departure = A.dates 
-FROM (SELECT id_travel, date_departure FROM view_travel_dep_arr) AS A(id, dates) 
-WHERE (id_travel = A.id);
 
 /*  une sous-requete dans le WHERE;*/
 /* récupère les produits avec le volume le plus élevé */
