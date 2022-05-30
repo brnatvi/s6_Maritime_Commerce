@@ -122,6 +122,59 @@ SELECT SUM(
     ))
 ) FROM step;
 
+/* la liste des articles ayant été chargé dans un bateau par ordre croissant */
+SELECT name_product, sum 
+FROM product NATURAL 
+JOIN (
+    SELECT id_product, SUM(quantity) 
+    FROM cargo_step NATURAL 
+    JOIN product 
+    WHERE load_unload='load' 
+    GROUP BY id_product) AS FOO 
+ORDER BY sum DESC;
 
-/*une requete recursive (par exemple pour reconstituer le trajet effectue par un certain bateau sur un laps de temps 
-recouvrant des voyages differents).*/
+/* L'id des produits représentant plus de la moitié des produits d'un port */
+SELECT id_product
+FROM cargo_port, (
+    SELECT id_port, SUM(quantity) 
+    FROM cargo_port 
+    GROUP BY id_port
+) AS FOO 
+WHERE FOO.id_port=cargo_port.id_port AND quantity > sum/2;
+
+/*La liste des continents ne possédant aucun port*/
+SELECT * 
+FROM continent 
+WHERE id_continent 
+NOT IN (
+    SELECT id_continent 
+    FROM port 
+    GROUP BY id_continent
+);
+
+/* Le nom des pays en guerre */
+SELECT DISTINCT name_country 
+FROM country 
+JOIN (
+    (SELECT DISTINCT id_country1 
+     FROM country_relations 
+     WHERE relation='belligerent'
+    ) 
+    UNION 
+    (SELECT DISTINCT id_country2 
+     FROM country_relations 
+     WHERE relation='belligerent'
+    )
+) AS id_countryc ON id_countryc.id_country1=country.id_country;
+
+/* Les pays possédant les navires les plus rapide */
+select name_country 
+from ship 
+NATURAL JOIN (
+    select * 
+    from type_ship, (
+        SELECT MAX(speed) 
+        from type_ship
+    ) AS FOO 
+    WHERE speed=max) AS BAR
+JOIN country ON nationality=id_country;
